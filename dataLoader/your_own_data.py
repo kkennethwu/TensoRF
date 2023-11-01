@@ -70,7 +70,7 @@ class YourOwnDataset(Dataset):
             c2w = torch.FloatTensor(pose)
             self.poses += [c2w]
 
-            image_path = os.path.join(self.root_dir, f"{frame['file_path']}.png")
+            image_path = os.path.join(self.root_dir, f"{frame['file_path']}")
             self.image_paths += [image_path]
             img = Image.open(image_path)
             

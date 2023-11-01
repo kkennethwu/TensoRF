@@ -128,6 +128,14 @@ def config_parser(cmd=None):
                         help='N images to vis')
     parser.add_argument("--vis_every", type=int, default=10000,
                         help='frequency of visualize the image')
+    # near_far
+    parser.add_argument("--near", type=float, default=0.05)
+    parser.add_argument("--far", type=float, default=3.5)
+    
+    ## frame options
+    parser.add_argument("--train_frame_num", type=int, action="append")
+    parser.add_argument("--noval_frame_num", type=int, action="append")
+    parser.add_argument("--test_frame_num", type=int, action="append")
     if cmd is not None:
         return parser.parse_args(cmd)
     else:

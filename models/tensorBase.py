@@ -4,6 +4,7 @@ import torch.nn.functional as F
 from .sh import eval_sh_bases
 import numpy as np
 import time
+import pdb
 
 
 def positional_encoding(positions, freqs):
@@ -410,6 +411,7 @@ class TensorBase(torch.nn.Module):
 
         # sample points
         viewdirs = rays_chunk[:, 3:6]
+        
         if ndc_ray:
             xyz_sampled, z_vals, ray_valid = self.sample_ray_ndc(rays_chunk[:, :3], viewdirs, is_train=is_train,N_samples=N_samples)
             dists = torch.cat((z_vals[:, 1:] - z_vals[:, :-1], torch.zeros_like(z_vals[:, :1])), dim=-1)

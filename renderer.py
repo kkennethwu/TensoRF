@@ -5,19 +5,21 @@ from models.tensoRF import TensorVM, TensorCP, raw2alpha, TensorVMSplit, AlphaGr
 from utils import *
 from dataLoader.ray_utils import ndc_rays_blender
 
+# def BVS_random_sample_residual():
 
 def OctreeRender_trilinear_fast(rays, tensorf, chunk=4096, N_samples=-1, ndc_ray=False, white_bg=True, is_train=False, device='cuda'):
 
     rgbs, alphas, depth_maps, weights, uncertainties = [], [], [], [], []
     N_rays_all = rays.shape[0]
+    ##### Below doing trilinear interpolation #####
     for chunk_idx in range(N_rays_all // chunk + int(N_rays_all % chunk > 0)):
         rays_chunk = rays[chunk_idx * chunk:(chunk_idx + 1) * chunk].to(device)
     
         rgb_map, depth_map = tensorf(rays_chunk, is_train=is_train, white_bg=white_bg, ndc_ray=ndc_ray, N_samples=N_samples)
-
+        
         rgbs.append(rgb_map)
         depth_maps.append(depth_map)
-    
+    # Maybe we can add BVS at here
     return torch.cat(rgbs), None, torch.cat(depth_maps), None, None
 
 @torch.no_grad()
@@ -40,7 +42,7 @@ def evaluation(test_dataset,tensorf, args, renderer, savePath=None, N_vis=5, prt
 
         W, H = test_dataset.img_wh
         rays = samples.view(-1,samples.shape[-1])
-
+        ##### renderer: octree_trilinear_fast #####
         rgb_map, _, depth_map, _, _ = renderer(rays, tensorf, chunk=4096, N_samples=N_samples,
                                         ndc_ray=ndc_ray, white_bg = white_bg, device=device)
         rgb_map = rgb_map.clamp(0.0, 1.0)
@@ -105,7 +107,12 @@ def evaluation_path(test_dataset,tensorf, c2ws, renderer, savePath=None, N_vis=5
         W, H = test_dataset.img_wh
 
         c2w = torch.FloatTensor(c2w)
-        rays_o, rays_d = get_rays(test_dataset.directions, c2w)  # both (h*w, 3)
+        
+        if test_dataset.dataset_name == "DTU":
+            rays_o, rays_d = test_dataset.gen_rays_at(test_dataset.intrinsics[0], c2w)
+        else:
+            rays_o, rays_d = get_rays(test_dataset.directions, c2w)  # both (h*w, 3)
+            
         if ndc_ray:
             rays_o, rays_d = ndc_rays_blender(H, W, test_dataset.focal[0], 1.0, rays_o, rays_d)
         rays = torch.cat([rays_o, rays_d], 1)  # (h*w, 6)
